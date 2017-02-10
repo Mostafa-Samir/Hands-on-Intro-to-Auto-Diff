@@ -1,2 +1,5 @@
 # compiled python files
 *.pyc
+
+# notebooks checkpoints
+.ipynb_checkpoints
