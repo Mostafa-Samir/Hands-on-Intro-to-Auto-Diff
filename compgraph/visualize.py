@@ -1,3 +1,4 @@
+
 import networkx as nx
 from collections import deque
 from nodes import *
@@ -35,12 +36,11 @@ def visualize_at(node):
                 if prev_node not in queue:
                     queue.push(prev_node)
 
-        nodes_colors = [_node[1]["color"] for _node in G.nodes(data=True)]
-        nodes_labels = {_node[0]: _node[1]["label"] for _node in G.nodes(data=True)}
-        edges_labels = {_edge: '$x$' for _edge in G.edges()}
+    nodes_colors = [_node[1]["color"] for _node in G.nodes(data=True)]
+    nodes_labels = {_node[0]: _node[1]["label"] for _node in G.nodes(data=True)}
+    edges_labels = {_edge: '$x$' for _edge in G.edges()}
 
     pos=nx.nx_agraph.graphviz_layout(G, prog='dot', args="-Grankdir=LR")
 
     nx.draw(G, pos, with_labels=False, arrows=True, node_color=nodes_colors, node_size=2000)
     nx.draw_networkx_labels(G, pos, labels=nodes_labels)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edges_labels, font_size=20)
