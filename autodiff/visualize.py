@@ -75,19 +75,13 @@ def visualize_AD(node):
 
     # set the stage for the visualization
     fig = plt.figure()
-    gs = gridspec.GridSpec(4, 3)
+    gs = gridspec.GridSpec(3, 1, hspace=0, wspace=0)
 
-    graph_ax = plt.subplot(gs[0:2, 0:])
-    chain_ax = plt.subplot(gs[2:3, 0:])
-    grads_ax = plt.subplot(gs[3: , 0:])
+    graph_ax = plt.subplot(gs[0:2, 0])
+    chain_ax = plt.subplot(gs[2:3, 0])
 
-    grads_ax.set_xticks([])
-    grads_ax.set_yticks([])
-    grads_ax.set_title("$\\mathbf{Gradient}$", size=20)
     chain_ax.axis("off")
-
-    grads_txt = grads_ax.text(0.2, 0.5, '', fontsize=25)
-    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25)
+    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center')
 
     # set the necessary data strutures fro reverse AD
     adjoint = defaultdict(int)
@@ -159,10 +153,10 @@ def visualize_AD(node):
         nx.draw(params['nx_graph'], pos, ax=graph_ax, hold=True, arrows=True, node_color=node_colors, node_size=2000)
         nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels)
         nx.draw_networkx_edge_labels(params['nx_graph'], pos, ax=graph_ax, edge_labels=edge_labels, bbox={'boxstyle':'square,pad=0.1', 'fc':'white', 'ec':'white'}, font_size=20)
-        grads_txt_buff = ""
-        if len(params['grads']) > 0:
-            grads_txt_buff = ', '.join(["$\\frac{\partial f}{\partial %s} = %.7s$" % (k, v) for k,v in params['grads'].iteritems()])
-        grads_txt.set_text(grads_txt_buff)
+        for variable in params['grads']:
+            node_pos = pos[variable]
+            d_txt = "$\\frac{\partial f}{\partial %s} = %.7s$" % (variable, params['grads'][variable])
+            graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center')
         chain_txt.set_text(chain_txt_buff)
 
     def init_func():
