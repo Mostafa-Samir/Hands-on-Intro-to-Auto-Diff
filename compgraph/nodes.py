@@ -125,7 +125,7 @@ class OperationalNode(Node):
             strides=opresult.strides,
             shape=opresult.shape,
             dtype=opresult.dtype,
-            buffer=opresult
+            buffer=np.copy(opresult)
         )
 
         obj.opname = opname
@@ -209,7 +209,7 @@ class VariableNode(Node):
         if name is not None:
             obj.name = name
         else:
-            obj.name = "const_%d" % (VariableNode.count)
+            obj.name = "_%d" % (VariableNode.count)
             VariableNode.count += 1
 
         return obj
