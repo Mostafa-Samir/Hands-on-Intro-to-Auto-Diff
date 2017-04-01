@@ -10,7 +10,7 @@ import numpy as np
 def _sweep_graph(node):
     """
     performs a backward sweep of the graph of the given node to build the nx
-    graph object
+    graph object and collect relevant info to the visualization
 
     Parameters:
     ----------
@@ -19,6 +19,7 @@ def _sweep_graph(node):
     """
 
     leafs_count = 0
+    var_node_names = []
     color_dict = {'VariableNode': 'lightblue', 'ConstantNode': 'orange'}
     color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else 'red'
 
@@ -31,6 +32,8 @@ def _sweep_graph(node):
     while len(queue) > 0:
         current = queue.pop()
         if isinstance(current, VariableNode) or isinstance(current, ConstantNode):
+            if isinstance(current, VariableNode):
+                var_node_names.append(current.name)
             if current not in queue:
                 leafs_count += 1
             continue
@@ -56,7 +59,7 @@ def _sweep_graph(node):
                 if current.operand_b not in queue:
                     queue.push(current.operand_b)
 
-    return G, leafs_count
+    return G, leafs_count, var_node_names
 
 
 def visualize_AD(node):
@@ -70,7 +73,7 @@ def visualize_AD(node):
         the node to visualize the reverse AD process on its computational graph
     """
 
-    nx_graph, leafs_count = _sweep_graph(node)
+    nx_graph, leafs_count, var_names = _sweep_graph(node)
     frames_count = len(nx_graph.edges()) + leafs_count
 
     # set the stage for the visualization
@@ -86,15 +89,96 @@ def visualize_AD(node):
     # set the necessary data strutures fro reverse AD
     adjoint = defaultdict(int)
     parameters_dict = {
+        'var_names': var_names,
         'nx_graph': nx_graph,
         'adjoint': defaultdict(int), # true if the next call of animate is handeling operand_b
         'queue': NodesQueue(),
         'current_node': None,
         'other_operand': False,
-        'grads': {}  # empty string to accumelate gradient on'
+        'grads_annotations': {}
     }
     parameters_dict['adjoint'][node.name] = ConstantNode.create_using(np.ones(node.shape))
     parameters_dict['queue'].push(node)
+
+    def node_grad(node, index):
+        """
+        returns a string containing the local grad of a node
+
+        Parameters:
+        ----------
+        node: Node
+            the node to print its local grad
+        index: int
+            the index of the operand to get the grad wrt
+        """
+
+        local_grad_txt = ""
+
+        if node.opname == 'add':
+            local_grad_txt += "$%s = %s + %s \Rightarrow \\frac{\partial %s}{\partial %s} = 1$" % (
+                node.name, node.operand_a.name, node.operand_b.name, node.name,
+                node.operand_a.name if index == 0 else node.operand_b.name
+            )
+        elif node.opname == 'sub':
+            local_grad_txt += "$%s = %s - %s \Rightarrow \\frac{\partial %s}{\partial %s} = %s1$" % (
+                node.name, node.operand_a.name, node.operand_b.name, node.name,
+                node.operand_a.name if index == 0 else node.operand_b.name,
+                "" if indx == 0 else "-"
+            )
+        elif node.opname == 'mul':
+            local_grad_txt += "$%s = %s \\times %s \Rightarrow \\frac{\partial %s}{\partial %s} = %s = %.4s$" % (
+                node.name, node.operand_a.name, node.operand_b.name, node.name,
+                node.operand_a.name if index == 0 else node.operand_b.name,
+                node.operand_b.name if index == 0 else node.operand_a.name,
+                node.operand_b if index == 0 else node.operand_a
+            )
+        elif node.opname == 'div':
+            local_grad_txt += "$%s = \\frac{%s}{%s} \Rightarrow \\frac{\partial %s}{\partial %s} =" % (
+                node.opname, node.operand_a.name, node.operand_b.name, node.name,
+                node.operand_a.name if index == 0 else node.operand_b.name
+            )
+            if index == 0:
+                local_grad_txt += "\\frac{1}{%s} = %.4s$" % (node.operand_b.name, 1 / node.operand_b)
+            else:
+                local_grad_txt += "-\\frac{%s}{%s^2} = %.4s$" % (
+                    node.operand_a.name, node.operand_b.name, -1 * node.operand_a / (node.operand_b **2)
+                )
+        elif node.opname == 'pow':
+            local_grad_txt += "$%s = %s^{%s} \Rightarrow \\frac{\partial %s}{\partial %s} =" % (
+                node.opname, node.operand_a.name, node.operand_b.name, node.name,
+                node.operand_a.name if index == 0 else node.operand_b.name
+            )
+            if index == 0:
+                local_grad_txt += "%s \\times %s^{%s - 1} = %.4s$" % (
+                    node.operand_b.name, node.operand_a.name, node.operand_b.name,
+                    node.operand_b * (node.operand_a ** (node.operand_b - 1))
+                )
+            else:
+                local_grad_txt += "%s^{%s}\ln %s = %.4s$" % (
+                    node.operand_a.name, node.operand_b.name, node.operand_a.name,
+                    node * np.log(node.operand_a)
+                )
+        elif node.opname == 'sin':
+            local_grad_txt += "$%s = \sin(%s) \Rightarrow \\frac{\partial %s}{\partial %s} = \cos(%s) = %.4s$" % (
+                node.name, node.operand_a.name, node.name, node.operand_a.name, node.operand_a.name,
+                np.cos(node.operand_a)
+            )
+        elif node.opname == 'cos':
+            local_grad_txt += "$%s = \cos(%s) \Rightarrow \\frac{\partial %s}{\partial %s} = -\sin(%s) = %.4s$" % (
+                node.name, node.operand_a.name, node.name, node.operand_a.name, node.operand_a.name,
+                -1 * np.sin(node.operand_a)
+            )
+        elif node.opname == 'exp':
+            local_grad_txt += "$%s = \exp(%s) \Rightarrow \\frac{\partial %s}{\partial %s} = \exp(%s) = %.4s$" % (
+                node.name, node.operand_a.name, node.name, node.operand_a.name, node.operand_a.name,
+                node
+            )
+        elif node.opname == 'log':
+            local_grad_txt += "$%s = \ln(%s) \Rightarrow \\frac{\partial %s}{\partial %s} = \\frac{1}{%s} = %.4s$" % (
+                node.name, node.operand_a.name, node.name, node.operand_a.name, node.operand_a.name,
+                1. / node.operand_a
+            )
+        return local_grad_txt
 
     def process_edge(current, prev, indx, params):
         """
@@ -122,7 +206,8 @@ def visualize_AD(node):
         chain_txt = ""
 
         if not isinstance(prev, ConstantNode):
-            chain_txt = "$\\frac{\partial f}{\partial %s}\leftarrow\\frac{\partial f}{\partial %s}\\frac{\partial %s}{\partial %s} = %.4s\\times%.4s=%.4s$" % (
+            chain_txt += node_grad(current, indx) + "\n"
+            chain_txt += "$\\frac{\partial f}{\partial %s} \/ += \/ \\frac{\partial f}{\partial %s}\\frac{\partial %s}{\partial %s} = %.4s\\times%.4s=%.4s$" % (
                     prev.name,
                     current.name,
                     current.name,
@@ -153,10 +238,13 @@ def visualize_AD(node):
         nx.draw(params['nx_graph'], pos, ax=graph_ax, hold=True, arrows=True, node_color=node_colors, node_size=2000)
         nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels)
         nx.draw_networkx_edge_labels(params['nx_graph'], pos, ax=graph_ax, edge_labels=edge_labels, bbox={'boxstyle':'square,pad=0.1', 'fc':'white', 'ec':'white'}, font_size=20)
-        for variable in params['grads']:
+        for variable in params['var_names']:
+            if variable in params['grads_annotations']:
+                params['grads_annotations'][variable].remove()
             node_pos = pos[variable]
-            d_txt = "$\\frac{\partial f}{\partial %s} = %.7s$" % (variable, params['grads'][variable])
-            graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center')
+            d_txt = "$\\frac{\partial f}{\partial %s} = %.7s$" % (variable, params['adjoint'][variable])
+            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center')
+            params['grads_annotations'][variable] = ant
         chain_txt.set_text(chain_txt_buff)
 
     def init_func():
@@ -178,7 +266,6 @@ def visualize_AD(node):
                 update_figure(params)
                 return []
             if isinstance(current_node, VariableNode):
-                params['grads'][current_node.name] = params['adjoint'][current_node.name]
                 update_figure(params)
                 return []
 
