@@ -107,7 +107,7 @@ def log(array, name=None):
     return OperationalNode.create_using(opvalue, 'log', array, name=name)
 
 
-def max(array, axis=None, name=None):
+def max(array, axis=None, keepdims=False, name=None):
     """
     defines a node in the computational graph representing a max operation
 
@@ -117,17 +117,20 @@ def max(array, axis=None, name=None):
         the array to be maxed out
     axis: int
         the axis to perform the max out on
+    keepdims: Boolean
+        a flag to determine if the dimensions are kept
     name: String
         node's name in the graph
     """
     if not isinstance(array, Node):
         array = ConstantNode.create_using(array)
-    opvalue = np.max(array, axis=axis)
+    opvalue = np.max(array, axis=axis, keepdims=keepdims)
     opnode = OperationalNode.create_using(opvalue, 'max', array, name=name)
 
     # save info for gradient computation
     opnode.axis = axis
-    opnode.with_keepdims = np.max(array, axis=axis, keep_dims=True)
+    opnode.keepdims = keepdims
+    opnode.with_keepdims = np.max(array, axis=axis, keepdims=True)
 
     return opnode
 
@@ -171,9 +174,11 @@ def where(condition, array_a, array_b, name=None):
         the name of the node
     """
     if not isinstance(array_a, Node):
-        array_a = ConstantNode.create_using(array_a).resize(condition.shape)
+        nd_array_a = np.full_like(condition, array_a)
+        array_a = ConstantNode.create_using(nd_array_a)
     if not isinstance(array_b, Node):
-        array_b = ConstantNode.create_using(array_b).resize(condition.shape)
+        nd_array_b = np.full_like(condition, array_b)
+        array_b = ConstantNode.create_using(nd_array_b)
     opvalue = np.where(condition, array_a, array_b)
     opnode = OperationalNode.create_using(opvalue, 'where', array_a, array_b, name=name)
     opnode.condition = condition  # save condition for gradient computation
@@ -214,3 +219,78 @@ def cos(array, name=None):
     opvalue = np.cos(array)
 
     return OperationalNode.create_using(opvalue, 'cos', array, name=name)
+
+def softmax_cross_entropy(logits, labels, name=None):
+    """
+    defines a softmax-cross-entropy op as a primitive for numerical stability
+
+    Parameters:
+    ----------
+    logits: Node| ndarray| Number
+        the model's prediction
+    labels:
+        the true labels
+    name: String
+        node's name in the graph
+    """
+    if not isinstance(logits, Node):
+        logits = ConstantNode.create_using(logits)
+    if not isinstance(labels, Node):
+        labels = ConstantNode.create_using(labels)
+
+    logits_max = np.max(logits, axis=1, keepdims=True)
+    exp_op = np.exp(logits - logits_max)
+    logits_softmax = exp_op / np.sum(exp_op, axis=1, keepdims=True)
+
+    cross_entropy = -1 * np.mean(labels * np.log(logits_softmax + 1e-7))
+
+    opnode = OperationalNode.create_using(
+        cross_entropy,
+        'softmax_cross_entropy',
+        logits,
+        name=name
+    )
+
+    # save info for gradient calculations
+    opnode.softmax_val = logits_softmax
+    opnode.labels = labels
+
+    return opnode
+
+def reshape(array, new_shape, name=None):
+    """
+    defines a node in the computational graph representing a reshape operation
+
+    Parameters:
+    ----------
+    array: Node| ndarray
+        the array to be reshaped
+    new_shape: iterable
+        the new shape to put the array in
+    name: String
+        node's name in the graph
+    """
+    if not isinstance(array, Node):
+        array = ConstantNode.create_using(array)
+    opvalue = np.reshape(array, new_shape)
+
+    return OperationalNode.create_using(opvalue, 'reshape', array, name=name)
+
+def squeeze(array, axis=None, name=None):
+    """
+    defines a node in the computational graph representing a squeeze operation
+
+    Parameters:
+    ----------
+    array: Node| ndarray
+        the array to be squeezed
+    axis: iterable
+        the 1 axes to be squeezed out of the array
+    name: String
+        node's name in the graph
+    """
+    if not isinstance(array, Node):
+        array = ConstantNode.create_using(array)
+    opvalue = np.squeeze(array, axis=axis)
+
+    return OperationalNode.create_using(opvalue, 'squeeze', array, name=name)
