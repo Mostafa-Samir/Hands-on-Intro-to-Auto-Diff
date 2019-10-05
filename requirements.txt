@@ -1,0 +1,8 @@
+numpy
+networkx
+scikit-learn
+ipykernel
+matplotlib
+wheel
+graphviz
+pygraphviz
