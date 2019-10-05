@@ -3,3 +3,9 @@
 
 # notebooks checkpoints
 .ipynb_checkpoints
+
+# venv
+venv
+
+#vscode files
+.vscode
