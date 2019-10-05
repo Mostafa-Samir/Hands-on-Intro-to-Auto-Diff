@@ -1,1 +1,1 @@
-from dualnumbers import *
+from dualnumbers.dualnumbers import *
