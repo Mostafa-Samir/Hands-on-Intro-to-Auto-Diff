@@ -1,5 +1,5 @@
 import numpy as np
-from nodes import *
+from compgraph.nodes import *
 
 def variable(initial_value, name=None):
     """

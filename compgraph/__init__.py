@@ -1,2 +1,2 @@
-from api import *
-from visualize import *
+from compgraph.api import *
+from compgraph.visualize import *
