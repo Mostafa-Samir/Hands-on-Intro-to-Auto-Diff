@@ -4,7 +4,7 @@ import matplotlib.gridspec as gridspec
 import networkx as nx
 from compgraph.nodes import *
 from collections import defaultdict
-import grads
+import autodiff.grads as grads
 import numpy as np
 
 def _sweep_graph(node):
@@ -39,25 +39,18 @@ def _sweep_graph(node):
             continue
         else:
 
-            G.add_node(
-                current.operand_a.name,
-                label=current.operand_a.name,
-                color=color(current.operand_a)
+            previous_nodes = sorted(
+                filter(lambda n: n is not None, [current.operand_a, current.operand_b]),
+                key=lambda n: n.name
             )
-            G.add_edge(current.operand_a.name, current.name)
 
-            if current.operand_a not in queue:
-                queue.push(current.operand_a)
-            if current.operand_b is not None:
-                G.add_node(
-                    current.operand_b.name,
-                    label=current.operand_b.name,
-                    color=color(current.operand_b)
-                )
-                G.add_edge(current.operand_b.name, current.name)
+            for prev_node in previous_nodes:
+                if prev_node is not None:
+                    G.add_node(prev_node.name, label=prev_node.name, color=color(prev_node))
+                    G.add_edge(prev_node.name, current.name)
 
-                if current.operand_b not in queue:
-                    queue.push(current.operand_b)
+                    if prev_node not in queue:
+                        queue.push(prev_node)
 
     return G, leafs_count, var_node_names
 
@@ -84,7 +77,7 @@ def visualize_AD(node):
     chain_ax = plt.subplot(gs[2:3, 0])
 
     chain_ax.axis("off")
-    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center')
+    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center', usetex=True)
 
     # set the necessary data strutures fro reverse AD
     adjoint = defaultdict(int)
@@ -242,8 +235,8 @@ def visualize_AD(node):
             if variable in params['grads_annotations']:
                 params['grads_annotations'][variable].remove()
             node_pos = pos[variable]
-            d_txt = "$\\frac{\partial f}{\partial %s} = %.7s$" % (variable, params['adjoint'][variable])
-            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center')
+            d_txt = "$\\frac{\partial f}{\partial %s} = %.4s$" % (variable, params['adjoint'][variable])
+            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center', usetex=True)
             params['grads_annotations'][variable] = ant
         chain_txt.set_text(chain_txt_buff)
 
