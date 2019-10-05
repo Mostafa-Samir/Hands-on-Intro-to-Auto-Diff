@@ -1,8 +1,8 @@
 from collections import defaultdict
 from compgraph.nodes import *
-from visualize import visualize_AD
+from autodiff.visualize import visualize_AD
 import numpy as np
-import grads
+import autodiff.grads as grads
 
 def gradient(node):
     """
@@ -36,7 +36,7 @@ def gradient(node):
         current_adjoint = adjoint[current_node.name]
         current_op = current_node.opname
 
-        op_grad = getattr(grads, '%s_grad' % (current_op))
+        op_grad = getattr(grads, '{}_grad'.format(current_op))
         next_adjoints = op_grad(current_adjoint, current_node)
 
         adjoint[current_node.operand_a.name] = grads.unbroadcast_adjoint(
