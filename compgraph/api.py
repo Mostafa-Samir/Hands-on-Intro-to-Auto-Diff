@@ -294,3 +294,11 @@ def squeeze(array, axis=None, name=None):
     opvalue = np.squeeze(array, axis=axis)
 
     return OperationalNode.create_using(opvalue, 'squeeze', array, name=name)
+
+
+def reset():
+    """ resets the count for all node types
+    """
+    OperationalNode.nodes_counter = {}
+    ConstantNode.count = 0
+    VariableNode.count = 0
