@@ -1,7 +1,7 @@
 
 import networkx as nx
 from collections import deque
-from nodes import *
+from compgraph.nodes import *
 
 def visualize_at(node):
     """
@@ -27,8 +27,13 @@ def visualize_at(node):
 
         if isinstance(current, VariableNode) or isinstance(current, ConstantNode):
             continue
+        
+        previous_nodes = sorted(
+            filter(lambda n: n is not None, [current.operand_a, current.operand_b]),
+            key=lambda n: n.name
+        )
 
-        for prev_node in [current.operand_a, current.operand_b]:
+        for prev_node in previous_nodes:
             if prev_node is not None:
                 G.add_node(prev_node.name, label=prev_node.name, color=color(prev_node))
                 G.add_edge(prev_node.name, current.name)
