@@ -24,7 +24,7 @@ def _sweep_graph(node):
     color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else 'red'
 
     queue = NodesQueue()
-    G = nx.DiGraph()
+    G = nx.DiGraph(graph={'rankdir': 'LR'})
 
     queue.push(node)
     G.add_node(node.name, label=node.name, color=color(node))
@@ -77,7 +77,7 @@ def visualize_AD(node):
     chain_ax = plt.subplot(gs[2:3, 0])
 
     chain_ax.axis("off")
-    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center', usetex=True)
+    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center', usetex=False)
 
     # set the necessary data strutures fro reverse AD
     adjoint = defaultdict(int)
@@ -226,7 +226,7 @@ def visualize_AD(node):
             else:
                 node_colors.append(_node[1]['color'])
 
-        pos=nx.nx_agraph.graphviz_layout(params['nx_graph'], prog='dot', args="-Grankdir=LR")
+        pos=nx.nx_pydot.pydot_layout(params['nx_graph'], prog='dot')
 
         nx.draw(params['nx_graph'], pos, ax=graph_ax, hold=True, arrows=True, node_color=node_colors, node_size=2000)
         nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels)
@@ -236,7 +236,7 @@ def visualize_AD(node):
                 params['grads_annotations'][variable].remove()
             node_pos = pos[variable]
             d_txt = "$\\frac{\partial f}{\partial %s} = %.4s$" % (variable, params['adjoint'][variable])
-            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center', usetex=True)
+            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center', usetex=False)
             params['grads_annotations'][variable] = ant
         chain_txt.set_text(chain_txt_buff)
 

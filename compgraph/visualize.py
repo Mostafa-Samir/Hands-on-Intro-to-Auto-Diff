@@ -14,7 +14,7 @@ def visualize_at(node):
         the node to visualize its computational graph
     """
 
-    G = nx.DiGraph()
+    G = nx.DiGraph(graph={'rankdir': 'LR'})
     queue = NodesQueue()
     color_dict = {'VariableNode': 'lightblue', 'ConstantNode': 'orange'}
     color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else 'red'
@@ -45,7 +45,7 @@ def visualize_at(node):
     nodes_labels = {_node[0]: _node[1]["label"] for _node in G.nodes(data=True)}
     edges_labels = {_edge: '$x$' for _edge in G.edges()}
 
-    pos=nx.nx_agraph.graphviz_layout(G, prog='dot', args="-Grankdir=LR")
+    pos=nx.nx_pydot.pydot_layout(G, prog='dot')
 
     nx.draw(G, pos, with_labels=False, arrows=True, node_color=nodes_colors, node_size=2000)
     nx.draw_networkx_labels(G, pos, labels=nodes_labels)

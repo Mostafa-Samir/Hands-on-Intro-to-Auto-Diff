@@ -4,5 +4,5 @@ scikit-learn
 ipykernel
 matplotlib
 wheel
-graphviz
-pygraphviz
+pydot
+jupyter
