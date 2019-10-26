@@ -77,7 +77,7 @@ def visualize_AD(node):
     chain_ax = plt.subplot(gs[2:3, 0])
 
     chain_ax.axis("off")
-    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center', usetex=False)
+    chain_txt = chain_ax.text(0.2, 0.5, '', fontsize=25, va='center')
 
     # set the necessary data strutures fro reverse AD
     adjoint = defaultdict(int)
@@ -236,7 +236,7 @@ def visualize_AD(node):
                 params['grads_annotations'][variable].remove()
             node_pos = pos[variable]
             d_txt = "$\\frac{\partial f}{\partial %s} = %.4s$" % (variable, params['adjoint'][variable])
-            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center', usetex=False)
+            ant = graph_ax.annotate(d_txt, xy=node_pos, xytext=(-100, 0), textcoords='offset points', size=20, ha='center', va='center')
             params['grads_annotations'][variable] = ant
         chain_txt.set_text(chain_txt_buff)
 
