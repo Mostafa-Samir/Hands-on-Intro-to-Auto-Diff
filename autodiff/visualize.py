@@ -55,7 +55,7 @@ def _sweep_graph(node):
     return G, leafs_count, var_node_names
 
 
-def visualize_AD(node):
+def visualize_AD(node, figsize=None):
     """
     craetes a matplotlib animation visualizing the reverse AD process on the
     the computational graph of the given node
@@ -70,7 +70,7 @@ def visualize_AD(node):
     frames_count = len(nx_graph.edges()) + leafs_count
 
     # set the stage for the visualization
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     gs = gridspec.GridSpec(3, 1, hspace=0, wspace=0)
 
     graph_ax = plt.subplot(gs[0:2, 0])
