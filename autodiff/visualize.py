@@ -297,6 +297,7 @@ def visualize_AD(node, figsize=None):
         return []
 
     rc('animation', html='html5')
+    rc("mathtext", fontset='cm')
     return animation.FuncAnimation(
         fig, animate, init_func=init_func,
         frames=frames_count, interval=2000,
