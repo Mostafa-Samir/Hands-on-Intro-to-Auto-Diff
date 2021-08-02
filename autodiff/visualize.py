@@ -216,19 +216,28 @@ def visualize_AD(node, figsize=None):
         """
         performs the necessary updates to the axes to craete the frame
         """
+
+        graph_ax.clear()
+
         node_colors = []
         node_labels = {}
+        node_edgecolors = []
+        node_edgethickness = []
 
         for _node in params['nx_graph'].nodes(data=True):
             node_labels[_node[0]] = _node[1]['label']
             if _node[0] == params['current_node'].name:
-                node_colors.append("lightgreen")
+                node_edgecolors.append("darkgreen")
+                node_edgethickness.append(5)
             else:
-                node_colors.append(_node[1]['color'])
+                node_edgecolors.append(_node[1]['color'])
+                node_edgethickness.append(1)
+            
+            node_colors.append(_node[1]['color'])
 
         pos=nx.nx_pydot.pydot_layout(params['nx_graph'], prog='dot')
 
-        nx.draw(params['nx_graph'], pos, ax=graph_ax, arrows=True, node_color=node_colors, node_size=2000)
+        nx.draw(params['nx_graph'], pos, ax=graph_ax, arrows=True, node_color=node_colors, node_size=2000, edgecolors=node_edgecolors, linewidths=node_edgethickness)
         nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels)
         nx.draw_networkx_edge_labels(params['nx_graph'], pos, ax=graph_ax, edge_labels=edge_labels, bbox={'boxstyle':'square,pad=0.1', 'fc':'white', 'ec':'white'}, font_size=20)
         for variable in params['var_names']:
@@ -290,6 +299,6 @@ def visualize_AD(node, figsize=None):
     rc('animation', html='html5')
     return animation.FuncAnimation(
         fig, animate, init_func=init_func,
-        frames=frames_count, interval=2000, blit=True,
+        frames=frames_count, interval=2000,
         fargs=[parameters_dict]
     )
