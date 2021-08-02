@@ -228,7 +228,7 @@ def visualize_AD(node):
 
         pos=nx.nx_pydot.pydot_layout(params['nx_graph'], prog='dot')
 
-        nx.draw(params['nx_graph'], pos, ax=graph_ax, hold=True, arrows=True, node_color=node_colors, node_size=2000)
+        nx.draw(params['nx_graph'], pos, ax=graph_ax, arrows=True, node_color=node_colors, node_size=2000)
         nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels)
         nx.draw_networkx_edge_labels(params['nx_graph'], pos, ax=graph_ax, edge_labels=edge_labels, bbox={'boxstyle':'square,pad=0.1', 'fc':'white', 'ec':'white'}, font_size=20)
         for variable in params['var_names']:
