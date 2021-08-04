@@ -230,7 +230,7 @@ def visualize_AD(node, figsize=None):
                 node_edgecolors.append("darkgreen")
                 node_edgethickness.append(5)
             else:
-                node_edgecolors.append(_node[1]['color'])
+                node_edgecolors.append('black')
                 node_edgethickness.append(1)
             
             node_colors.append(_node[1]['color'])
