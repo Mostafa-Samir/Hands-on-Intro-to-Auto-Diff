@@ -21,13 +21,13 @@ def _sweep_graph(node):
     leafs_count = 0
     var_node_names = []
     color_dict = {'VariableNode': 'lightblue', 'ConstantNode': 'orange'}
-    color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else 'red'
+    color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else '#d5a6f9'
 
     queue = NodesQueue()
     G = nx.DiGraph(graph={'rankdir': 'LR'})
 
     queue.push(node)
-    G.add_node(node.name, label=node.name, color=color(node))
+    G.add_node(node.name, label=f"${node.name}$", color=color(node))
 
     while len(queue) > 0:
         current = queue.pop()
@@ -46,7 +46,7 @@ def _sweep_graph(node):
 
             for prev_node in previous_nodes:
                 if prev_node is not None:
-                    G.add_node(prev_node.name, label=prev_node.name, color=color(prev_node))
+                    G.add_node(prev_node.name, label=f"${prev_node.name}$", color=color(prev_node))
                     G.add_edge(prev_node.name, current.name)
 
                     if prev_node not in queue:
@@ -68,6 +68,8 @@ def visualize_AD(node, figsize=None):
 
     nx_graph, leafs_count, var_names = _sweep_graph(node)
     frames_count = len(nx_graph.edges()) + leafs_count
+
+    edge_labels = {}
 
     # set the stage for the visualization
     fig = plt.figure(figsize=figsize)
@@ -227,7 +229,7 @@ def visualize_AD(node, figsize=None):
         for _node in params['nx_graph'].nodes(data=True):
             node_labels[_node[0]] = _node[1]['label']
             if _node[0] == params['current_node'].name:
-                node_edgecolors.append("darkgreen")
+                node_edgecolors.append("#45a325")
                 node_edgethickness.append(5)
             else:
                 node_edgecolors.append('black')
@@ -238,8 +240,8 @@ def visualize_AD(node, figsize=None):
         pos=nx.nx_pydot.pydot_layout(params['nx_graph'], prog='dot')
 
         nx.draw(params['nx_graph'], pos, ax=graph_ax, arrows=True, node_color=node_colors, node_size=2000, edgecolors=node_edgecolors, linewidths=node_edgethickness)
-        nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels)
-        nx.draw_networkx_edge_labels(params['nx_graph'], pos, ax=graph_ax, edge_labels=edge_labels, bbox={'boxstyle':'square,pad=0.1', 'fc':'white', 'ec':'white'}, font_size=20)
+        nx.draw_networkx_labels(params['nx_graph'], pos, ax=graph_ax, labels=node_labels, font_size=15)
+        nx.draw_networkx_edge_labels(params['nx_graph'], pos, ax=graph_ax, edge_labels=edge_labels, bbox={'boxstyle':'square,pad=0.1', 'fc':'white', 'ec':'white'}, font_size=18, font_color='slategray', font_weight="bold")
         for variable in params['var_names']:
             if variable in params['grads_annotations']:
                 params['grads_annotations'][variable].remove()
@@ -258,21 +260,22 @@ def visualize_AD(node, figsize=None):
         """
 
         chain_txt_buff = ""
-        edge_labels = {}
 
         if len(params['queue']) > 0 and not params['other_operand']:
             params['current_node'] = params['queue'].pop()
             current_node = params['current_node']
 
             if isinstance(current_node, ConstantNode):
-                update_figure(params)
+                update_figure(params, "Constant node, nothing to do", edge_labels)
                 return []
             if isinstance(current_node, VariableNode):
-                update_figure(params)
+                update_figure(params, "Variable node, nothing to do", edge_labels)
                 return []
 
             chain_txt_buff = process_edge(current_node, current_node.operand_a, 0, params)
-            edge_labels[(current_node.operand_a.name, current_node.name)] = "$%.4s$" % (params['adjoint'][current_node.name])
+            
+            #if not isinstance(current_node.operand_a, ConstantNode):
+                #edge_labels[(current_node.operand_a.name, current_node.name)] = "$\\frac{\partial f}{\partial %s} = %.4s$" % (current_node.name, params['adjoint'][current_node.name])
 
             if current_node.operand_a not in params['queue']:
                 params['queue'].push(current_node.operand_a)
@@ -283,7 +286,8 @@ def visualize_AD(node, figsize=None):
             current_node = params['current_node']
 
             chain_txt_buff = process_edge(current_node, current_node.operand_b, 1, params)
-            edge_labels[(current_node.operand_b.name, current_node.name)] = "$%.4s$" % (params['adjoint'][current_node.name])
+            #if not isinstance(current_node.operand_b, ConstantNode):
+                #edge_labels[(current_node.operand_b.name, current_node.name)] = "$\\frac{\partial f}{\partial %s} = %.4s$" % (current_node.name, params['adjoint'][current_node.name])
 
             if current_node.operand_b not in params['queue']:
                 params['queue'].push(current_node.operand_b)
