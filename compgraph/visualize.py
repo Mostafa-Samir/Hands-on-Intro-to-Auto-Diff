@@ -1,6 +1,7 @@
 from collections import deque
 
 import networkx as nx
+from matplotlib import rc
 import matplotlib.pyplot as plt
 
 from compgraph.nodes import *
@@ -19,9 +20,9 @@ def visualize_at(node, figsize=None):
     G = nx.DiGraph(graph={'rankdir': 'LR'})
     queue = NodesQueue()
     color_dict = {'VariableNode': 'lightblue', 'ConstantNode': 'orange'}
-    color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else 'red'
+    color = lambda n: color_dict[n.__class__.__name__] if n.__class__.__name__ in color_dict else '#d5a6f9'
 
-    G.add_node(node.name, label=node.name, color=color(node))
+    G.add_node(node.name, label=f"${node.name}$", color=color(node))
     queue.push(node)
 
     while queue:
@@ -37,7 +38,7 @@ def visualize_at(node, figsize=None):
 
         for prev_node in previous_nodes:
             if prev_node is not None:
-                G.add_node(prev_node.name, label=prev_node.name, color=color(prev_node))
+                G.add_node(prev_node.name, label=f"${prev_node.name}$", color=color(prev_node))
                 G.add_edge(prev_node.name, current.name)
 
                 if prev_node not in queue:
@@ -49,7 +50,8 @@ def visualize_at(node, figsize=None):
 
     pos=nx.nx_pydot.pydot_layout(G, prog='dot')
 
+    rc("mathtext", fontset='cm')
     plt.figure(figsize=figsize)
 
     nx.draw(G, pos, with_labels=False, arrows=True, node_color=nodes_colors, node_size=2000)
-    nx.draw_networkx_labels(G, pos, labels=nodes_labels)
+    nx.draw_networkx_labels(G, pos, labels=nodes_labels, font_size=15)
