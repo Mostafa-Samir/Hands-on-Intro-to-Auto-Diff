@@ -6,3 +6,4 @@ matplotlib
 wheel
 pydot
 jupyter
+tqdm
