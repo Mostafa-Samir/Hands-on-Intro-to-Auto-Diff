@@ -1,12 +1,14 @@
 # A Hands-on Introduction to Automatic Differentiation
 
-This is the code repository accompanying the blog post [A Hands-on Introduction to Automatic Differentiation, a step-by-step guide to build your own computational framework for Deep Learning](<add link here>).
+This is the code repository accompanying the two-parts blog posts series: 
+- [A Hands-on Introduction to Automatic Differentiation - Part 1](https://mostafa-samir.github.io/auto-diff-pt1/).
+- [Build Your own Deep Learning Framework - A Hands-on Introduction to Automatic Differentiation - Part 2](https://mostafa-samir.github.io/auto-diff-pt2/)
 
 ## How to use the code
 
 Before using the code, there are some requirements that needs to be present on your machine to run the code samples in the Jupyter notebooks. Some of these requirements are internal and can be easily fetched with Python's `pip` across the different platforms. Other requirements are external and needs to be fetched from other sources than Python's `pip`, and these sources usually differ based on your operating system. But fear not, it's quite simple to get them and you'll find the how-to instruction below.
 
-### Installing external requirements
+### Installing external requirements for the visualizations
 For the code to work, we need to have both `graphviz` and `ffmpeg` to be installed on your machine. These packages are mainly concerned with the computational graph visualizations and the animated reverse automatic differentiation visualizations. We here provide the instructions on how to install them on Ubuntu, macOs, and Windows.
 
 #### Installing `graphviz`
@@ -30,7 +32,7 @@ For the code to work, we need to have both `graphviz` and `ffmpeg` to be install
 1. Download the windows static build from [ffmpeg website](https://ffmpeg.zeranoe.com/builds/), which is a zip file.
 2. Unzip the build file in your preferred location (Let it be `C:\Program Files (x86)\ffmpeg`)
 4. Add `C:\Program Files (x86)\ffmpeg\bin` to your `PATH` environment variable.
-### Installing internal requirements and running the code
+### Installing python requirements and running the code
 
 _this assumes that you have python3.5 installed on your machine and you know how to use Jupyter notebooks_
 
